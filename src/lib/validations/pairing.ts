@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const BEVERAGE_TYPES = [
+  { value: 'none', label: 'None (Food Only)' },
   { value: 'wine', label: 'Wine' },
   { value: 'beer', label: 'Beer' },
   { value: 'spirits', label: 'Spirits' },

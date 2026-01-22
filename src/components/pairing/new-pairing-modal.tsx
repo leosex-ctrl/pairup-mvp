@@ -30,6 +30,7 @@ const BEVERAGE_TYPE_MAP: Record<string, string> = {
   'Spirits': 'spirits',
   'Cocktails': 'cocktails',
   'Non-Alcoholic': 'na-beer', // Default NA option
+  'None detected': 'none', // Food-only posts
 }
 
 export function NewPairingModal() {
@@ -192,10 +193,7 @@ export function NewPairingModal() {
       setError('Please enter a food name')
       return
     }
-    if (!beverageTag) {
-      setError('Please select a beverage type')
-      return
-    }
+    // beverageTag can be empty for food-only posts - will default to 'none'
     if (!rating) {
       setError('Please select a rating')
       return
@@ -207,7 +205,8 @@ export function NewPairingModal() {
       const formData = new FormData()
       formData.append('image', imageFile)
       formData.append('food_name', foodName.trim())
-      formData.append('beverage_type', beverageTag)
+      // Default to 'none' for food-only posts
+      formData.append('beverage_type', beverageTag || 'none')
       if (flavorPrinciple) {
         formData.append('flavor_principle', flavorPrinciple)
       }

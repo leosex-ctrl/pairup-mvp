@@ -20,6 +20,14 @@ CRITICAL CLASSIFICATION RULES:
 
 DO NOT hallucinate or assume items exist if they are not clearly visible in the photo.
 
+IMPORTANT - ALWAYS RETURN COMPLETE DATA:
+Even if only FOOD or only BEVERAGE is visible, you MUST still return ALL fields:
+- food_name (or "None detected")
+- beverage_type (or "None detected")
+- flavor_principle (ALWAYS required - describe the food's flavor profile)
+- review_text (ALWAYS required - describe what you see and suggest pairings)
+Do NOT return null or empty values for flavor_principle or review_text. These are always required.
+
 Analyze the image and return a JSON object with exactly these fields:
 
 1. food_name:
@@ -57,7 +65,10 @@ Example with both items:
 {"food_name":"Grilled Ribeye Steak","beverage_type":"Wine","flavor_principle":"Fat + Tannin","review_text":"This beautifully marbled ribeye is calling for a bold red wine. The rich fat content and savory char will be perfectly balanced by the tannins in a Cabernet Sauvignon or Malbec.","beverage_brand":null,"food_brand":null}
 
 Example with only beverage:
-{"food_name":"None detected","beverage_type":"Beer","flavor_principle":"Bitter + Sweet","review_text":"This golden Belgian ale has complex fruity esters and a dry finish. It would pair wonderfully with creamy cheeses, mussels, or crispy frites. The carbonation cuts through rich, fatty foods beautifully.","beverage_brand":"Duvel","food_brand":null}`
+{"food_name":"None detected","beverage_type":"Beer","flavor_principle":"Bitter + Sweet","review_text":"This golden Belgian ale has complex fruity esters and a dry finish. It would pair wonderfully with creamy cheeses, mussels, or crispy frites. The carbonation cuts through rich, fatty foods beautifully.","beverage_brand":"Duvel","food_brand":null}
+
+Example with only food (NO beverage):
+{"food_name":"Beef Biltong","beverage_type":"None detected","flavor_principle":"Fat + Tannin","review_text":"This savory dried beef has an intense umami flavor with hints of coriander and pepper. The rich, fatty texture would pair beautifully with a bold red wine like Pinotage or a hoppy IPA to cut through the richness.","beverage_brand":null,"food_brand":null}`
 
 export async function POST(request: Request) {
   console.log('=== ANALYZE PAIRING API ===')
