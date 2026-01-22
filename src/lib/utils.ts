@@ -30,3 +30,19 @@ export function truncate(str: string, length: number): string {
   if (str.length <= length) return str
   return str.slice(0, length) + '...'
 }
+
+export function calculateAge(dateOfBirth: Date): number {
+  const today = new Date()
+  let age = today.getFullYear() - dateOfBirth.getFullYear()
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth()
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+    age--
+  }
+
+  return age
+}
+
+export function isAdult(dateOfBirth: Date): boolean {
+  return calculateAge(dateOfBirth) >= 18
+}
