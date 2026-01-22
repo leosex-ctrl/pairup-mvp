@@ -11,6 +11,11 @@ First, carefully examine the image to determine what is ACTUALLY visible:
 - Is there FOOD in the image? (meals, snacks, dishes, ingredients)
 - Is there a BEVERAGE in the image? (drinks, bottles, cans, glasses with liquid)
 
+CRITICAL CLASSIFICATION RULES:
+- Condiment bottles (mayo, ketchup, mustard, hot sauce, soy sauce, etc.) are FOOD, NOT beverages
+- Only classify something as a beverage if it is meant to be drunk
+- DO NOT default to "Wine" - only use "Wine" if wine is actually visible
+
 DO NOT hallucinate or assume items exist if they are not clearly visible in the photo.
 
 Analyze the image and return a JSON object with exactly these fields:
@@ -100,16 +105,39 @@ export async function POST(request: Request) {
 
     console.log('Sending to Gemini API...')
 
-    // Analyze the image
-    const result = await model.generateContent([
-      SYSTEM_PROMPT,
-      {
-        inlineData: {
-          mimeType,
-          data: base64,
-        },
-      },
-    ])
+    // Analyze the image with retry logic for 503 errors
+    const MAX_RETRIES = 3
+    const RETRY_DELAY = 2000
+    let result
+    let lastError
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`Gemini API attempt ${attempt}/${MAX_RETRIES}`)
+        result = await model.generateContent([
+          SYSTEM_PROMPT,
+          {
+            inlineData: {
+              mimeType,
+              data: base64,
+            },
+          },
+        ])
+        break // Success, exit retry loop
+      } catch (apiError) {
+        lastError = apiError
+        console.error(`Gemini API attempt ${attempt} failed:`, apiError)
+
+        if (attempt < MAX_RETRIES) {
+          console.log(`Waiting ${RETRY_DELAY}ms before retry...`)
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+        }
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error('Gemini API failed after all retries')
+    }
 
     const response = result.response
     const text = response.text()
