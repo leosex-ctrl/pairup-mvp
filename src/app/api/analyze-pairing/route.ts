@@ -12,9 +12,11 @@ First, carefully examine the image to determine what is ACTUALLY visible:
 - Is there a BEVERAGE in the image? (drinks, bottles, cans, glasses with liquid)
 
 CRITICAL CLASSIFICATION RULES:
-- Condiment bottles (mayo, ketchup, mustard, hot sauce, soy sauce, etc.) are FOOD, NOT beverages
-- Only classify something as a beverage if it is meant to be drunk
+- Analyze the container shape CAREFULLY. Is it a condiment? (e.g., Mayo, Kewpie, Ketchup, Hot Sauce, Mustard, Salad Dressing, Olive Oil, Soy Sauce, Sriracha)
+- If YES, it is FOOD. You MUST return beverage_type: "None detected". Do NOT classify sauces or condiments as beverages.
+- Only classify something as a beverage if it is CLEARLY meant to be drunk (wine bottle, beer can, soda, cocktail glass, etc.)
 - DO NOT default to "Wine" - only use "Wine" if wine is actually visible
+- When in doubt, return beverage_type: "None detected" rather than guessing
 
 DO NOT hallucinate or assume items exist if they are not clearly visible in the photo.
 
