@@ -43,14 +43,14 @@ export function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="space-y-4">
-      {/* Beverage Chips */}
-      <div className="flex flex-wrap gap-2">
+      {/* Beverage Chips - horizontally scrollable on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible scrollbar-hide">
         {BEVERAGE_FILTERS.map((filter) => (
           <button
             key={filter.value}
             onClick={() => onBeverageChange(filter.value)}
             className={cn(
-              'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+              'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0',
               selectedBeverage === filter.value
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted hover:bg-muted/80 text-muted-foreground'

@@ -79,12 +79,14 @@
   @apply bg-muted-foreground/50;
 }
 
-/* Hide scrollbar on mobile bottom nav area */
-.no-scrollbar::-webkit-scrollbar {
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
-.no-scrollbar {
+.no-scrollbar,
+.scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }

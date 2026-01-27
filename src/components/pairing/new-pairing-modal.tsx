@@ -287,7 +287,7 @@ export function NewPairingModal() {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          New Pairing
+          <span className="hidden sm:inline">New Pairing</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
