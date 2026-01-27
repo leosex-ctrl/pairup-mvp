@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { createClient } from '@/lib/supabase/client'
 import { BEVERAGE_TYPES } from '@/lib/validations/pairing'
+import { toggleLike } from '@/app/actions'
 
 interface Like {
   user_id: string
@@ -48,12 +48,17 @@ const FLAVOR_BADGE_COLORS: Record<string, string> = {
 }
 
 export function FeedCard({ pairing, currentUserId, onLikeUpdate }: FeedCardProps) {
-  const [isLiking, setIsLiking] = useState(false)
-  const supabase = createClient()
+  const [isPending, startTransition] = useTransition()
+  const [optimisticLiked, setOptimisticLiked] = useState<boolean | null>(null)
+  const [optimisticCount, setOptimisticCount] = useState<number | null>(null)
 
   const likes = pairing.likes || []
-  const likesCount = likes.length
-  const userHasLiked = currentUserId ? likes.some(like => like.user_id === currentUserId) : false
+  const baseLikesCount = likes.length
+  const baseUserHasLiked = currentUserId ? likes.some(like => like.user_id === currentUserId) : false
+
+  // Use optimistic values if set, otherwise use base values
+  const likesCount = optimisticCount !== null ? optimisticCount : baseLikesCount
+  const userHasLiked = optimisticLiked !== null ? optimisticLiked : baseUserHasLiked
 
   const getBeverageLabel = (type: string | null, brand: string | null) => {
     const typeLabel = type
@@ -72,54 +77,37 @@ export function FeedCard({ pairing, currentUserId, onLikeUpdate }: FeedCardProps
     return FLAVOR_BADGE_COLORS[principle] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   }
 
-  const handleToggleLike = async () => {
-    if (!currentUserId || isLiking) return
+  const handleToggleLike = () => {
+    if (!currentUserId || isPending) return
 
-    setIsLiking(true)
+    // Optimistic update - instantly flip the UI
+    const newLiked = !userHasLiked
+    const newCount = newLiked ? likesCount + 1 : likesCount - 1
+    setOptimisticLiked(newLiked)
+    setOptimisticCount(newCount)
 
-    // Optimistic update
-    const optimisticLikes = userHasLiked
-      ? likes.filter(like => like.user_id !== currentUserId)
-      : [...likes, { user_id: currentUserId, pairing_id: pairing.id }]
-
+    // Also update parent state for consistency
+    const optimisticLikes = newLiked
+      ? [...likes, { user_id: currentUserId, pairing_id: pairing.id }]
+      : likes.filter(like => like.user_id !== currentUserId)
     onLikeUpdate(pairing.id, optimisticLikes)
 
-    try {
-      if (userHasLiked) {
-        // Unlike: delete from likes
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', currentUserId)
-          .eq('pairing_id', pairing.id)
+    // Call server action
+    startTransition(async () => {
+      const result = await toggleLike(pairing.id)
 
-        if (error) {
-          console.error('Error unliking:', error)
-          // Revert on error
-          onLikeUpdate(pairing.id, likes)
-        }
+      if (!result.success) {
+        // Revert on error
+        console.error('Like toggle failed:', result.error)
+        setOptimisticLiked(baseUserHasLiked)
+        setOptimisticCount(baseLikesCount)
+        onLikeUpdate(pairing.id, likes)
       } else {
-        // Like: insert into likes
-        const { error } = await supabase
-          .from('likes')
-          .insert({
-            user_id: currentUserId,
-            pairing_id: pairing.id,
-          })
-
-        if (error) {
-          console.error('Error liking:', error)
-          // Revert on error
-          onLikeUpdate(pairing.id, likes)
-        }
+        // Clear optimistic state after success (real data will come from revalidation)
+        setOptimisticLiked(null)
+        setOptimisticCount(null)
       }
-    } catch (error) {
-      console.error('Error toggling like:', error)
-      // Revert on error
-      onLikeUpdate(pairing.id, likes)
-    } finally {
-      setIsLiking(false)
-    }
+    })
   }
 
   return (
@@ -166,7 +154,7 @@ export function FeedCard({ pairing, currentUserId, onLikeUpdate }: FeedCardProps
             variant="ghost"
             size="sm"
             onClick={handleToggleLike}
-            disabled={!currentUserId || isLiking}
+            disabled={!currentUserId || isPending}
             className={`gap-1.5 px-2 ${userHasLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}`}
           >
             {userHasLiked ? (
