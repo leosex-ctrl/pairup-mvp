@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
 import { BEVERAGE_TYPES } from '@/lib/validations/pairing'
 
@@ -184,6 +185,12 @@ export function FeedCard({ pairing, currentUserId, onLikeUpdate }: FeedCardProps
 
           {/* Meta info */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={pairing.profiles?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs">
+                {pairing.profiles?.username?.charAt(0).toUpperCase() || '?'}
+              </AvatarFallback>
+            </Avatar>
             <span>@{pairing.profiles?.username ?? 'anonymous'}</span>
             <span>·</span>
             <span>{new Date(pairing.created_at).toLocaleDateString()}</span>
